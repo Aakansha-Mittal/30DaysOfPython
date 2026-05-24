@@ -1,3 +1,7 @@
+'''
+String type conversion - str()
+'''
+
 print('a' in 'Akshi')
 print('A' in 'Akshi')
 print('a' not in 'Akshi')
