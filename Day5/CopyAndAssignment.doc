@@ -1,0 +1,360 @@
+# Understanding Assignment, Shallow Copy, and Deep Copy in Python
+
+One of the most confusing things for Python beginners is this:
+
+```python
+lst1 = [1, 2, 3]
+lst2 = lst1
+
+lst2[0] = 100
+
+print(lst1)
+```
+
+Output:
+
+```python
+[100, 2, 3]
+```
+
+At first glance, this feels strange.
+Why did changing `lst2` also change `lst1`?
+
+The answer lies in understanding references, mutability, shallow copy, and deep copy.
+
+Let’s break everything down step by step.
+
+---
+
+# Variables in Python Store References
+
+In Python, variables do not directly store objects.
+They store references to objects.
+
+When we write:
+
+```python
+lst1 = [1, 2, 3]
+```
+
+internally it looks something like this:
+
+```text
+lst1 ---> [1, 2, 3]
+```
+
+Now if we do:
+
+```python
+lst2 = lst1
+```
+
+then both variables point to the same object.
+
+```text
+lst1 ----\
+           ---> [1, 2, 3]
+lst2 ----/
+```
+
+This is called a shared reference.
+
+So modifying the list using one variable affects the same list object.
+
+```python
+lst2.append(4)
+
+print(lst1)
+```
+
+Output:
+
+```python
+[1, 2, 3, 4]
+```
+
+This is important:
+
+> Assignment is not copying.
+
+---
+
+# Mutable vs Immutable Objects
+
+To understand copying properly, we must first understand mutability.
+
+## Mutable Objects
+
+These objects can be modified after creation.
+
+Examples:
+
+* list
+* dictionary
+* set
+
+```python
+nums = [1, 2]
+nums.append(3)
+```
+
+The same object gets modified.
+
+---
+
+## Immutable Objects
+
+These objects cannot be modified after creation.
+
+Examples:
+
+* int
+* string
+* tuple
+
+```python
+x = 5
+x = x + 1
+```
+
+Here, Python creates a new integer object instead of modifying the old one.
+
+This difference becomes very important in shallow copy.
+
+---
+
+# Shallow Copy
+
+A shallow copy creates:
+
+* a new outer object
+* but inner objects are still shared
+
+We can create shallow copy using:
+
+```python
+lst2 = lst1.copy()
+```
+
+or
+
+```python
+import copy
+lst2 = copy.copy(lst1)
+```
+
+Both create a shallow copy.
+
+---
+
+# Understanding Shallow Copy with Nested Lists
+
+Consider this example:
+
+```python
+lst1 = [[1, 2], [3, 4]]
+
+lst2 = lst1.copy()
+
+lst2[0].append(100)
+
+print(lst1)
+print(lst2)
+```
+
+Output:
+
+```python
+[[1, 2, 100], [3, 4]]
+[[1, 2, 100], [3, 4]]
+```
+
+Even after copying, both lists changed.
+
+Why?
+
+Because shallow copy only copies the outer list.
+
+The inner lists are still shared.
+
+Internally:
+
+```text
+lst1 ---> [ refA , refB ]
+lst2 ---> [ refA , refB ]
+```
+
+Both lists point to the same inner objects.
+
+---
+
+# Mutation vs Reassignment
+
+Now look at this example carefully:
+
+```python
+lst1 = [[1, 2], [3, 4]]
+
+lst2 = lst1.copy()
+
+lst2[0] = [100, 200]
+
+print(lst1)
+print(lst2)
+```
+
+Output:
+
+```python
+[[1, 2], [3, 4]]
+[[100, 200], [3, 4]]
+```
+
+This time, `lst1` did not change.
+
+Why?
+
+Because we did not mutate the shared inner list.
+Instead, we replaced the reference entirely.
+
+This is one of the most important concepts behind shallow copy.
+
+---
+
+# What Happens with Immutable Inner Objects?
+
+Suppose the inner objects are tuples.
+
+```python
+lst1 = [(1, 2), (3, 4)]
+
+lst2 = lst1.copy()
+
+lst2[0] = (100, 200)
+
+print(lst1)
+print(lst2)
+```
+
+Output:
+
+```python
+[(1, 2), (3, 4)]
+[(100, 200), (3, 4)]
+```
+
+Why didn’t `lst1` change?
+
+Because tuples are immutable.
+
+Python creates a new tuple object instead of modifying the existing one.
+
+---
+
+# Deep Copy
+
+Deep copy solves the shared inner object problem.
+
+A deep copy:
+
+* creates a new outer object
+* creates new inner objects too
+
+Nothing is shared.
+
+To create deep copy:
+
+```python
+import copy
+
+lst2 = copy.deepcopy(lst1)
+```
+
+Example:
+
+```python
+import copy
+
+lst1 = [[1, 2], [3, 4]]
+
+lst2 = copy.deepcopy(lst1)
+
+lst2[0].append(100)
+
+print(lst1)
+print(lst2)
+```
+
+Output:
+
+```python
+[[1, 2], [3, 4]]
+[[1, 2, 100], [3, 4]]
+```
+
+Now both lists are completely independent.
+
+---
+
+# Real-World Analogy
+
+Imagine a folder containing files.
+
+## Assignment
+
+Two people using the same folder.
+
+```text
+Person A ---> Folder
+Person B ---> Same Folder
+```
+
+Any change is visible to both.
+
+---
+
+## Shallow Copy
+
+A new folder is created, but the files inside are shortcuts to the original files.
+
+```text
+New Folder ---> Same Files
+```
+
+Editing a file affects both folders.
+
+---
+
+## Deep Copy
+
+A completely new folder with duplicated files.
+
+```text
+New Folder ---> New Files
+```
+
+Everything becomes independent.
+
+---
+
+# Final Summary
+
+| Operation          | Meaning                   |
+| ------------------ | ------------------------- |
+| `b = a`            | No copy, shared reference |
+| `a.copy()`         | Shallow copy              |
+| `copy.deepcopy(a)` | Deep copy                 |
+
+---
+
+# Key Takeaways
+
+* Variables in Python store references, not actual objects.
+* Assignment does not create a copy.
+* Shallow copy copies only the outer object.
+* Inner objects remain shared in shallow copy.
+* Mutable objects can reflect shared changes.
+* Immutable objects usually create new objects instead of modifying old ones.
+* Deep copy creates completely independent objects.
+
+Once you understand references and mutability, shallow copy and deep copy become much easier to understand.
